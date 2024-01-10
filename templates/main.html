@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Log Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <h1>Server Log Analyzer</h1>
+
+    <div id="charts-container" class="chart-wrap">
+        <!-- Update the IP Address chart section -->
+        <div class="chart-card">
+            <h2 class="card-title">Visitors by Country Code</h2>
+            <canvas id="ipChart" width="400" height="400"></canvas>
+        </div>
+
+        <div class="chart-card">
+            <h2 class="card-title">Users by Browser</h2>
+            <canvas id="browserChart" width="400" height="400"></canvas>
+        </div>
+        <div class="chart-card">
+            <h2 class="card-title">Users by Operating System</h2>
+            <canvas id="osChart" width="400" height="400"></canvas>
+        </div>
+        <div class="chart-card">
+            <h2 class="card-title">Visitors by Date and Time</h2>
+            <canvas id="dateTimeChart" width="400" height="400"></canvas>
+        </div>
+    </div>
+
+    <script>
+        function updateCharts() {
+            fetch(`/chart_data/IP`)
+                .then(response => response.json())
+                .then(data => renderChart(data, 'ipChart', 'pie'));
+
+            fetch(`/chart_data/Browser`)
+                .then(response => response.json())
+                .then(data => renderChart(data, 'browserChart', 'doughnut'));
+
+            fetch(`/chart_data/Operating%20System`)
+                .then(response => response.json())
+                .then(data => renderChart(data, 'osChart', 'bar'));
+
+            fetch(`/chart_data/Date%20Time`)
+                .then(response => response.json())
+                .then(data => renderChart(data, 'dateTimeChart', 'line'));
+        }
+
+        function renderChart(data, chartId, chartType) {
+            console.log('Received data:', data);
+            var canvas = document.getElementById(chartId);
+
+            if (!canvas) {
+                console.error(`Canvas element with ID '${chartId}' not found.`);
+                return;
+            }
+
+            // Ensure the canvas has a 2d context
+            var ctx = canvas.getContext('2d');
+
+            if (!ctx) {
+                console.error(`Unable to obtain 2D context for canvas with ID '${chartId}'.`);
+                return;
+            }
+
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            window[chartId] = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: Object.keys(data),
+                    datasets: [{
+                        data: Object.values(data),
+                        backgroundColor: getRandomColorArray(Object.keys(data).length),
+                    }]
+                }
+            });
+        }
+
+        function getRandomColorArray(count) {
+            var colors = [];
+            for (var i = 0; i < count; i++) {
+                var randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
+                colors.push(randomColor);
+            }
+            return colors;
+        }
+
+        updateCharts();
+    </script>
+</body>
+
+</html>
